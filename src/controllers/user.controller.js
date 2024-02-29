@@ -3,6 +3,7 @@ import {ApiError} from '../utils/ApiError.js'
 import {User} from '../models/user.model.js'
 import {uploadOnCloudinary} from '../utils/cloudinary.js'
 import { ApiResponse } from "../utils/ApiResponse.js";
+import mongoose from "mongoose";
 
 const registeruser=asyncHandler(async (req,res)=>{
     //get user details from frontend
@@ -19,7 +20,6 @@ const registeruser=asyncHandler(async (req,res)=>{
     // })
 
     const {email, username, password, fullname}=req.body
-    console.log(email)
     // if(fullname === "")
     // throw new ApiError(400,"Full Name is required")
 
@@ -30,7 +30,7 @@ const registeruser=asyncHandler(async (req,res)=>{
         throw new ApiError(400,field + " is required")
     }
 
-    const existingUser=User.findOne({
+    const existingUser=await User.findOne({
         $or:[{ username },{ email }]
     })
 
@@ -42,9 +42,11 @@ const registeruser=asyncHandler(async (req,res)=>{
     const coverImageLocalPath=req.files?.coverImage[0]?.path
 
     if(!avatarLocalPath){
+        console.log("avatar not found")
         throw new ApiError(400,"Avatar file is required")
     }
-
+   
+    console.log("reached")
     const avatar= await uploadOnCloudinary(avatarLocalPath)
     const coverImage= await uploadOnCloudinary(coverImageLocalPath)
 
@@ -53,7 +55,7 @@ const registeruser=asyncHandler(async (req,res)=>{
     }
 
     const user= await User.create({
-        fullName,
+        fullname,
         avatar:avatar.url,
         coverImage:coverImage?.url || " ",
         email,
